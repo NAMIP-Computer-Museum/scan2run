@@ -1,0 +1,1 @@
+java -Xms32m -Xmx384m -cp ../dist/JavaOCR.jar -DTRAINING_IMAGE_DIR=C:\DEV\NAM-IP-WEB\OCR\training-DAINAMIC net.sourceforge.javaocr.ocrPlugins.OCRDemo.OCRScannerDemo C:\DEV\NAM-IP-WEB\OCR\LISTING-P1H.png

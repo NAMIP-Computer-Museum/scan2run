@@ -1,0 +1,17 @@
+net.sourceforge.javaocr
+net.sourceforge.javaocr.gui
+net.sourceforge.javaocr.gui.characterExtractor
+net.sourceforge.javaocr.gui.characterTracer
+net.sourceforge.javaocr.gui.handwritingRecognizer
+net.sourceforge.javaocr.gui.lineExtractor
+net.sourceforge.javaocr.gui.meanSquareOCR
+net.sourceforge.javaocr.ocr
+net.sourceforge.javaocr.ocrPlugins.OCRDemo
+net.sourceforge.javaocr.ocrPlugins.aspectRatio
+net.sourceforge.javaocr.ocrPlugins.charExtractor
+net.sourceforge.javaocr.ocrPlugins.charTracer
+net.sourceforge.javaocr.ocrPlugins.handWriting
+net.sourceforge.javaocr.ocrPlugins.lineExtractor
+net.sourceforge.javaocr.ocrPlugins.mseOCR
+net.sourceforge.javaocr.scanner
+net.sourceforge.javaocr.scanner.accuracy
