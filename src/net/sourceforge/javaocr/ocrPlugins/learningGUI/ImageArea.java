@@ -14,6 +14,7 @@ public class ImageArea extends JLabel{
 
 	private BufferedImage img;
 	int cx, cy, cw, ch;
+	double zoom;
 	
     @Override
     protected void paintComponent(Graphics g) {
@@ -21,10 +22,11 @@ public class ImageArea extends JLabel{
         Dimension dim = getPreferredSize();
         g.drawImage(img, 0, 0, dim.width, dim.height, this);
         g.setColor(Color.red);
-        g.drawRect(cx, cy, cw, ch);
+        g.drawRect((int)(cx*zoom), (int)(cy*zoom), (int)(cw*zoom), (int)(ch*zoom));
     }
 
     public void setZoom(double zoom) {
+    	this.zoom=zoom;
         int w = (int) (zoom * img.getWidth());
         int h = (int) (zoom * img.getHeight());
         setPreferredSize(new Dimension(w, h));
@@ -32,38 +34,14 @@ public class ImageArea extends JLabel{
         repaint();
     }
     
-    public void setSelection(int x1, int y1, int x2, int y2) {
-    	cx=x1;
-    	cy=y1; 
-    	cw=x2-x1;
-    	ch=y2-y1;
+    public void setSelection(int x, int y, int w, int h) {
+    	cx=x;
+    	cy=y;
+    	cw=w;
+    	ch=h;
+        repaint();
     }
 	
-	/*
-	Image image;
-    int width, height;
-
-    public void paint(Graphics g) {
-        int x, y;
-        //this is to center the image
-        x = (this.getWidth() - width) < 0 ? 0 : (this.getWidth() - width);
-        y = (this.getHeight() - width) < 0 ? 0 : (this.getHeight() - width);
-
-        g.drawImage(image, x, y, width, height, null);
-    }
-
-    public void setDimensions(int width, int height) {
-        this.height = height;
-        this.width = width;
-
-        image = image.getScaledInstance(width, height, Image.SCALE_FAST);
-        Container parent = this.getParent();
-        if (parent != null) {
-            parent.repaint();
-        }
-        this.repaint();
-    } */
-    
     public void setImage(BufferedImage image) {
     	this.img=image;
     	setZoom(1.0);

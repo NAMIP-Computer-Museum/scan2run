@@ -8,6 +8,8 @@ package net.sourceforge.javaocr.ocrPlugins.learningGUI;
 
 import java.awt.BorderLayout;
 import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +30,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import net.sourceforge.javaocr.ocrPlugins.mseOCR.CharacterRange;
+import net.sourceforge.javaocr.ocrPlugins.mseOCR.OCRListener;
 import net.sourceforge.javaocr.ocrPlugins.mseOCR.OCRScanner;
 import net.sourceforge.javaocr.ocrPlugins.mseOCR.TrainingImage;
 import net.sourceforge.javaocr.ocrPlugins.mseOCR.TrainingImageLoader;
@@ -68,6 +71,14 @@ public class LearningGUI extends JFrame
 		JMenu menu_scan = new JMenu("Scan"); 
 		JMenuItem start = new JMenuItem("Start");
 		menu_scan.add(start);
+		start.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				process(image);
+			}
+		});
+		
 		JMenuItem char_load = new JMenuItem("Load learned profile");
 		menu_scan.add(char_load);		
 		JMenuItem char_check = new JMenuItem("Check learned profile");
@@ -120,7 +131,7 @@ public class LearningGUI extends JFrame
         }
         img_area.setImage(image);
         img_area.setZoom(0.33);  // TODO compute
-        img_area.setSelection(100,100,200,200);
+        // img_area.setSelection(246,88,8,12);
     }
 
     /**
@@ -164,6 +175,7 @@ public class LearningGUI extends JFrame
                             trainingImageMap);
             	}
             }
+            /*
             if (debug)
             {
                 System.err.println("ascii.png");
@@ -172,6 +184,7 @@ public class LearningGUI extends JFrame
                     trainingImageDir + "ascii.png",
                     new CharacterRange('!', 'Z'),
                     trainingImageMap);
+            */
             if (debug)
             {
                 System.err.println("adding images");
@@ -189,24 +202,11 @@ public class LearningGUI extends JFrame
         }
     }
 
-    public void process(String imageFilename)
+    public void process(Image image)
     {
-        if (debug)
-        {
-            System.err.println("process(" + imageFilename + ")");
-        }
-        try
-        {
-            image = ImageIO.read(new File(imageFilename));
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-
         if (image == null)
         {
-            System.err.println("Cannot find image file: " + imageFilename);
+            System.err.println("No image");
             return;
         }
 
@@ -230,8 +230,22 @@ public class LearningGUI extends JFrame
         {
             System.err.println("setting image for display");
         }
-       
-        System.out.println(imageFilename + ":");
+
+        scanner.addOCRListener(new OCRListener() {
+			
+			@Override
+			public void selectionUpdated(int x, int y, int w, int h) {
+				System.out.println("SEL "+x+" "+y+" "+w+" "+h);
+				img_area.setSelection(x, y, w, h);
+			}
+			
+			@Override
+			public void textUpdated(String text) {
+				text_area.setText(text);
+			}
+
+		});
+        scanner.scan(image,0,0,0,0,null);
 //        String text = scanner.scan(image, 0, 0, 0, 0, null);
 //        System.out.println("[" + text + "]");
     }
@@ -263,6 +277,7 @@ public class LearningGUI extends JFrame
         
         LearningGUI gui = new LearningGUI();
         gui.setImage(img_path);
+        gui.loadTrainingImages(trainingImageDir);
         gui.pack();
         gui.setSize(800,600);
         gui.setVisible(true);

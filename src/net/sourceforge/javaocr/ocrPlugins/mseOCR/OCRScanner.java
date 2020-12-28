@@ -11,6 +11,7 @@ import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
@@ -45,6 +46,7 @@ import net.sourceforge.javaocr.scanner.accuracy.OCRIdentification;
 public class OCRScanner extends DocumentScannerListenerAdaptor implements AccuracyProviderInterface
 {
 	private BufferedImage source;
+	private OCRListener listener;
 
     private static final int BEST_MATCH_STORE_COUNT = 8;
     private StringBuffer decodeBuffer = new StringBuffer();
@@ -64,6 +66,10 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
     	MINSETXX=new ArrayList<Character>();
     	for(char c: s.toCharArray())
     		MINSETXX.add(c);
+    }
+    
+    public void addOCRListener(OCRListener l) {
+    	listener=l;
     }
     
     public void acceptAccuracyListener(AccuracyListenerInterface listener)
@@ -187,12 +193,13 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
             int y2,
             int rowY1,
             int rowY2)
-    {
-
+    {	
         int[] pixels = pixelImage.pixels;
         int w = pixelImage.width;
         int h = pixelImage.height;
         int areaW = x2 - x1, areaH = y2 - y1;
+       	if (listener!=null) listener.selectionUpdated(x1, y1, areaW, areaH);
+        
         float aspectRatio = ((float) areaW) / ((float) areaH);
         int rowHeight = rowY2 - rowY1;
         float topWhiteSpaceFraction = (float) (y1 - rowY1) / (float) rowHeight;
@@ -299,6 +306,8 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
               decodeBuffer.append(bestChars[0].charValue());
         	}
         	System.out.println(decodeBuffer.toString());
+        	if (listener!=null) listener.textUpdated(decodeBuffer.toString());
+
 
             //Send accuracy of this identification to the listener
             if (accListener != null)
@@ -317,6 +326,7 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
         	System.out.println("NO BEST GUESS "+x1+" "+y1+" "+x2+" "+y2);
         	String s=askToUser(pixelImage, x1, y1, x2, y2, rowY1, rowY2);
         	decodeBuffer.append(s);
+        	if (listener!=null) listener.textUpdated(decodeBuffer.toString());
         	
             if (accListener != null)
             {
@@ -327,7 +337,8 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
     }
     
     public boolean isTraining() {
-    	return trainingImages.keySet().size()<26; // TODO THRESHOLD
+    	return false;
+    	//   	return trainingImages.keySet().size()<26; // TODO THRESHOLD
     }
     
     private BufferedImage normalise(BufferedImage img, int x1, int y1, int x2, int y2) {
