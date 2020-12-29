@@ -31,6 +31,12 @@ Quick instructions for OCR
 * clone the project
 * compile using ANT task
 * run demoDAI.sh or demoDAI.bat for an automated listing recognition process
+* goto the scan menu and select "start"
+* answer the occasional question to enter unknown character or confirm some possibily unreliable characters
+* current progress is visible in UI (red rectangle) and bottom text area is continuouslu updated
+* limitation: modal window blocks access to sliders
+
+![Scan in progress](https://github.com/NAMIP-Computer-Museum/scan2run/blob/main/screenshots/Scan2Run-scap02.png?raw=true)
 
 Quick instruction for MAME injection
 * launch MAME in console mode with the following option 
@@ -38,10 +44,12 @@ Quick instruction for MAME injection
 * start your emulator with basic prompt
 * type inject(<path_to_listing> in the MAME prompt
 * check the import at the console, use F10 full speed more to speed up import
+* checkout the video at: https://www.youtube.com/watch?v=L2JlUjgxQHo
 
-## Troubleshooting
+## Troubleshooting/Limitations
 
 For OCR:
+* modal dialogs block the UI so the controls (sliders for zoom, image and text area are not accessible once the process is started)
 * different training parameters can be used to force more validation (error level, number of occurences, coverage of coding characters...)
 * quality of the training set cannot yet be checked but is planned, possibly removing poor entries or learning errors ;-)
 
