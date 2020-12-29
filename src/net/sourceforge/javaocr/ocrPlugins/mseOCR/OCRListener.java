@@ -7,4 +7,7 @@ public interface OCRListener {
 	// called when text is updated with new character
 	public void textUpdated(String text);
 	
+	// called when user input is requested
+	public void userRequested(char c);	
+	
 }

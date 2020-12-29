@@ -47,8 +47,11 @@ public class LearningGUI extends JFrame
     private boolean debug = true;
     BufferedImage image;
     ImageArea img_area;
-    JTextArea text_area;
+    JTextArea txt_area;
     OCRScanner scanner;
+    int nRequested;
+    int nAsked;
+    int nConfirmed;
 
     public LearningGUI()
     {
@@ -68,7 +71,9 @@ public class LearningGUI extends JFrame
 		menu_file.add(exit);
 		menuBar.add(menu_file);
 		
-		JMenu menu_scan = new JMenu("Scan"); 
+		JMenu menu_scan = new JMenu("Scan");
+		JMenuItem params = new JMenuItem("Parameters");
+		menu_scan.add(params);
 		JMenuItem start = new JMenuItem("Start");
 		menu_scan.add(start);
 		start.addActionListener(new ActionListener() {
@@ -78,14 +83,16 @@ public class LearningGUI extends JFrame
 				process(image);
 			}
 		});
-		
-		JMenuItem char_load = new JMenuItem("Load learned profile");
-		menu_scan.add(char_load);		
-		JMenuItem char_check = new JMenuItem("Check learned profile");
-		menu_scan.add(char_check);
-		JMenuItem char_save = new JMenuItem("Save learned profile");
-		menu_scan.add(char_save);
 		menuBar.add(menu_scan);
+		
+		JMenu menu_training = new JMenu("Training");
+		JMenuItem char_load = new JMenuItem("Load learned profile");
+		menu_training.add(char_load);		
+		JMenuItem char_check = new JMenuItem("Check learned profile");
+		menu_training.add(char_check);
+		JMenuItem char_save = new JMenuItem("Save learned profile");
+		menu_training.add(char_save);
+		menuBar.add(menu_training);
 		 
 		JMenu menu_help = new JMenu("Help"); 
 		JMenuItem help = new JMenuItem("Instructions");
@@ -109,13 +116,17 @@ public class LearningGUI extends JFrame
 	    add(slider,BorderLayout.PAGE_START);
 
 		img_area=new ImageArea();
-        JScrollPane scrollPane = new JScrollPane(img_area);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-		add(scrollPane,BorderLayout.CENTER);
-		text_area=new JTextArea();
-		text_area.setRows(5);
-		add(text_area,BorderLayout.PAGE_END);
+        JScrollPane scrollPaneImg = new JScrollPane(img_area);
+        scrollPaneImg.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPaneImg.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		add(scrollPaneImg,BorderLayout.CENTER);
+		
+		txt_area=new JTextArea();
+		txt_area.setRows(15);
+        JScrollPane scrollPaneTxt = new JScrollPane(txt_area);
+        scrollPaneTxt.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPaneTxt.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		add(scrollPaneTxt,BorderLayout.PAGE_END);
 		
         // scanner
     	scanner = new OCRScanner();
@@ -231,6 +242,12 @@ public class LearningGUI extends JFrame
             System.err.println("setting image for display");
         }
 
+        nRequested=0;
+        nAsked=0;
+        nConfirmed=0;
+        scanner.setAskThreshold(2.2);
+        scanner.setConfirmThreshold(2.7);
+        scanner.setTrainingThreshold(0);
         scanner.addOCRListener(new OCRListener() {
 			
 			@Override
@@ -241,11 +258,23 @@ public class LearningGUI extends JFrame
 			
 			@Override
 			public void textUpdated(String text) {
-				text_area.setText(text);
+				txt_area.setText(text);
+			}
+
+			@Override
+			public void userRequested(char c) {
+				nRequested++;
+				if (c==(char)0) 
+					nAsked++;
+				else 
+					nConfirmed++;
+				int txt_l=txt_area.getText().length();
+		        System.out.println(txt_l+" "+nRequested+" "+nAsked+" "+nConfirmed+" "+(nRequested*1.0)/txt_l);
 			}
 
 		});
-        scanner.scan(image,0,0,0,0,null);
+        String text=scanner.scan(image,0,0,0,0,null);
+        System.out.println(text.length()+" "+nRequested+" "+nAsked+" "+nConfirmed+" "+(nRequested*1.0)/text.length());
 //        String text = scanner.scan(image, 0, 0, 0, 0, null);
 //        System.out.println("[" + text + "]");
     }
@@ -262,7 +291,7 @@ public class LearningGUI extends JFrame
         String img_path=null;
         if (args.length>0) {
         	if (args[0].equals("-demo")) {
-        		img_path=".\\ListingTests\\LISTING-P1.png";
+        		img_path=".\\ListingTests\\LISTING-P1b.png";
         	  trainingImageDir=".\\ListingTests\\trainingDAINAMIC";
         	} else {
         		img_path=args[0];

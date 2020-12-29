@@ -47,6 +47,9 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
 {
 	private BufferedImage source;
 	private OCRListener listener;
+	private double askThreshold;
+	private double confirmThreshold;	
+	private int trainingThreshold;
 
     private static final int BEST_MATCH_STORE_COUNT = 8;
     private StringBuffer decodeBuffer = new StringBuffer();
@@ -70,6 +73,18 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
     
     public void addOCRListener(OCRListener l) {
     	listener=l;
+    }
+    
+    public void setAskThreshold(double t) {
+    	askThreshold=t;
+    }
+
+    public void setConfirmThreshold(double t) {
+    	confirmThreshold=t;
+    }
+    
+    public void setTrainingThreshold(int t) {
+    	trainingThreshold=t;
     }
     
     public void acceptAccuracyListener(AccuracyListenerInterface listener)
@@ -297,10 +312,16 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
         {
 //        	System.out.println("BEST COUNT: "+bestCount);
 //        	for(int i=0; i<bestCount; i++) System.out.print(bestMSEs[i]+"   ");
-        	System.out.println(decodeBuffer.length()+" "+bestChars[0].charValue()+"  "+bestMSEs[0]);
+      	    double diff=1000.0;
+      	    boolean ambiguity=false;
+      	    if (bestCount>1) diff=bestMSEs[1]-bestMSEs[0]; // check for possible ambiguity 
+      	    if (diff<0.3) ambiguity=true;
+        	System.out.println(decodeBuffer.length()+" "+bestChars[0].charValue()+"  "+bestMSEs[0]+"  "+diff);
         	System.out.println("TS SIZE: "+trainingImages.keySet().size());
-        	if (isTraining() || (bestMSEs[0]>0.9)) { // TODO THRESHOLD
-        	  String s=confirmGuess(pixelImage, x1, y1, x2, y2, rowY1, rowY2, bestChars[0].charValue());
+        	if (isTraining() || (bestMSEs[0]>askThreshold) || ambiguity) {
+        	  char ch=bestChars[0].charValue();
+        	  if ((bestMSEs[0]>confirmThreshold) || ambiguity) ch=(char)0;
+        	  String s=fromUser(pixelImage, x1, y1, x2, y2, rowY1, rowY2, ch);
         	  decodeBuffer.append(s);
         	} else {
               decodeBuffer.append(bestChars[0].charValue());
@@ -324,7 +345,7 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
         else
         {
         	System.out.println("NO BEST GUESS "+x1+" "+y1+" "+x2+" "+y2);
-        	String s=askToUser(pixelImage, x1, y1, x2, y2, rowY1, rowY2);
+        	String s=fromUser(pixelImage, x1, y1, x2, y2, rowY1, rowY2);
         	decodeBuffer.append(s);
         	if (listener!=null) listener.textUpdated(decodeBuffer.toString());
         	
@@ -337,10 +358,10 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
     }
     
     public boolean isTraining() {
-    	return false;
-    	//   	return trainingImages.keySet().size()<26; // TODO THRESHOLD
+    	return trainingImages.keySet().size()<trainingThreshold;
     }
     
+    // NOT USED
     private BufferedImage normalise(BufferedImage img, int x1, int y1, int x2, int y2) {
     	int std_width=100;
     	int std_height=100;
@@ -387,11 +408,12 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
         return normalizedImage;
     }
     
-    private String askToUser(PixelImage img, int x1, int y1, int x2, int y2, int rowY1, int rowY2) {
-    	return confirmGuess(img, x1,y1,x2,y2, rowY1, rowY2, (char)0);
+    private String fromUser(PixelImage img, int x1, int y1, int x2, int y2, int rowY1, int rowY2) {
+    	return fromUser(img, x1,y1,x2,y2, rowY1, rowY2, (char)0);
     }
     
-    private String confirmGuess(PixelImage img, int x1, int y1, int x2, int y2, int rowY1, int rowY2, char c) {      
+    private String fromUser(PixelImage img, int x1, int y1, int x2, int y2, int rowY1, int rowY2, char c) {    
+    	listener.userRequested(c);
         //Extract the character
     	/*
         BufferedImage crop = new BufferedImage(x2-x1, y2-y1, BufferedImage.TYPE_INT_RGB);
@@ -415,7 +437,10 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
         }
         
         // ask a guess if not confirmed
-        String input = (String)JOptionPane.showInputDialog(null,"Please input a value","User Input", JOptionPane.QUESTION_MESSAGE, icon, null, null);
+        String input="";
+        while(input.length()==0) {
+        	input = (String)JOptionPane.showInputDialog(null,"What is this character ?","User Input", JOptionPane.QUESTION_MESSAGE, icon, null, null);
+        }
         System.out.println("GOT: "+input);
         
         // learn
