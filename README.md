@@ -27,18 +27,18 @@ The code is in alpha stage and include the following
 
 ## Running the code
 
-Quick instructions for OCR
+Quick instructions for listing OCR
 * clone the project
-* compile using ANT task
-* run demoDAI.sh or demoDAI.bat for an automated listing recognition process
-* goto the scan menu and select "start"
+* compile using ANT task or using compile.sh/bat script in the scripts directory and run demoDAI.sh/.bat for an automated listing recognition process
+* alternately you can also compile using JDT and run net.sourceforge.javaocr.ocrPlugins.learningGUI.LearningGUI with -demo argument
+* once the GUI is started, goto the scan menu and select "start"
 * answer the occasional question to enter unknown character or confirm some possibily unreliable characters
 * current progress is visible in UI (red rectangle) and bottom text area is continuouslu updated
 * limitation: modal window blocks access to sliders
 
 ![Scan in progress](https://github.com/NAMIP-Computer-Museum/scan2run/blob/main/screenshots/Scan2Run-scap02.png?raw=true)
 
-Quick instruction for MAME injection
+Quick instruction for listing injection into MAME
 * launch MAME in console mode with the following option 
   -console -autoboot_script import.lua
 * start your emulator with basic prompt
