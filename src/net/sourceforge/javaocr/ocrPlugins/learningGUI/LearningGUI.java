@@ -17,9 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -106,7 +104,7 @@ public class LearningGUI extends JFrame
 		// panels
 		getContentPane().setLayout(new BorderLayout());
 
-		JSlider slider = new JSlider(0, 1000, 500);
+		final JSlider slider = new JSlider(0, 1000, 500);
 	    slider.addChangeListener(new ChangeListener() {
 	        @Override
 	        public void stateChanged(ChangeEvent e) {
@@ -132,12 +130,12 @@ public class LearningGUI extends JFrame
     	scanner = new OCRScanner();
     }
     
-    public void setImage(String path) {
+    public void setImage(File file) {
         try {
-            image = ImageIO.read(new File(path));
+            image = ImageIO.read(file);
         }
         catch (IOException e) {
-            LOG.warning("Image "+path+" not found - ignoring");
+            LOG.warning("Image "+file+" not found - ignoring");
             return;
         }
         img_area.setImage(image);
@@ -149,23 +147,18 @@ public class LearningGUI extends JFrame
      * Load demo training images.
      * @param trainingImageDir The directory from which to load the images.
      */
-    public void loadTrainingImages(String trainingImageDir)
+    public void loadTrainingImages(File folder)
     {
         if (debug)
         {
-            System.err.println("loadTrainingImages(" + trainingImageDir + ")");
-        }
-        if (!trainingImageDir.endsWith(File.separator))
-        {
-            trainingImageDir += File.separator;
+            System.err.println("loadTrainingImages(" + folder.getAbsolutePath() + ")");
         }
         try
         {
             scanner.clearTrainingImages();
             TrainingImageLoader loader = new TrainingImageLoader();
             HashMap<Character, ArrayList<TrainingImage>> trainingImageMap = new HashMap<Character, ArrayList<TrainingImage>>();
-            System.out.println("Loading DAINAMIC data set from "+trainingImageDir);
-            File folder = new File(trainingImageDir);
+            LOG.info("Loading DAINAMIC data set from "+folder.getAbsolutePath());
             File[] listOfFiles = folder.listFiles();
             for(File file:listOfFiles) {
             	String name=file.getName();
@@ -281,18 +274,16 @@ public class LearningGUI extends JFrame
 
     public static void main(String[] args)
     {
-    	// TODO USAGE
-        {
-            System.err.println("Please specify one or more image filenames.");
-            System.err.println("Use -demo to load demo image");
-        } 
+    	File workdir=new File(System.getProperty("user.dir"));
+    	LOG.info("Working directory: "+workdir.getAbsolutePath());
+    	
         String trainingImageDir = System.getProperty("TRAINING_IMAGE_DIR");
         
         String img_path=null;
         if (args.length>0) {
         	if (args[0].equals("-demo")) {
-        		img_path=".\\ListingTests\\LISTING-P1b.png";
-        	  trainingImageDir=".\\ListingTests\\trainingDAINAMIC";
+        		img_path="ListingTests/LISTING-P1b.png";
+        	  trainingImageDir="ListingTests/trainingDAINAMIC";
         	} else {
         		img_path=args[0];
         	}		
@@ -305,8 +296,8 @@ public class LearningGUI extends JFrame
         }
         
         LearningGUI gui = new LearningGUI();
-        gui.setImage(img_path);
-        gui.loadTrainingImages(trainingImageDir);
+        gui.setImage(new File(workdir, img_path));
+        gui.loadTrainingImages(new File(workdir,trainingImageDir));
         gui.pack();
         gui.setSize(800,600);
         gui.setVisible(true);

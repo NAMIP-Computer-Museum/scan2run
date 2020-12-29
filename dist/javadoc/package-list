@@ -11,6 +11,7 @@ net.sourceforge.javaocr.ocrPlugins.aspectRatio
 net.sourceforge.javaocr.ocrPlugins.charExtractor
 net.sourceforge.javaocr.ocrPlugins.charTracer
 net.sourceforge.javaocr.ocrPlugins.handWriting
+net.sourceforge.javaocr.ocrPlugins.learningGUI
 net.sourceforge.javaocr.ocrPlugins.lineExtractor
 net.sourceforge.javaocr.ocrPlugins.mseOCR
 net.sourceforge.javaocr.scanner
