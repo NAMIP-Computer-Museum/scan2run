@@ -440,6 +440,7 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
         String input="";
         while(input.length()==0) {
         	input = (String)JOptionPane.showInputDialog(null,"What is this character ?","User Input", JOptionPane.QUESTION_MESSAGE, icon, null, null);
+        	
         }
         System.out.println("GOT: "+input);
         

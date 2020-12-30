@@ -12,15 +12,20 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTextArea;
@@ -42,8 +47,10 @@ public class LearningGUI extends JFrame
 {
 
     private static final long serialVersionUID = 1L;
+    private static final String APP_NAME="Scan2Run Learning GUI";
     private boolean debug = true;
     BufferedImage image;
+    File currentFile;
     ImageArea img_area;
     JTextArea txt_area;
     OCRScanner scanner;
@@ -54,7 +61,7 @@ public class LearningGUI extends JFrame
     public LearningGUI()
     {
     	// GUI config
-        setTitle("Scan2Run Learning GUI");
+        setTitle(APP_NAME);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
         // GUI menu
@@ -62,16 +69,38 @@ public class LearningGUI extends JFrame
 		
 		JMenu menu_file = new JMenu("File"); 
 		JMenuItem load = new JMenuItem("Load Image");
+		load.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				loadImage();
+			}
+		});		
+		
+		
 		menu_file.add(load);
 		JMenuItem save = new JMenuItem("Save Text");
 		menu_file.add(save);
+		save.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				saveText();
+			}
+		});		
+		
 		JMenuItem exit = new JMenuItem("Exit");
 		menu_file.add(exit);
+		exit.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		});		
 		menuBar.add(menu_file);
 		
 		JMenu menu_scan = new JMenu("Scan");
-		JMenuItem params = new JMenuItem("Parameters");
-		menu_scan.add(params);
 		JMenuItem start = new JMenuItem("Start");
 		menu_scan.add(start);
 		start.addActionListener(new ActionListener() {
@@ -82,7 +111,9 @@ public class LearningGUI extends JFrame
 			}
 		});
 		menuBar.add(menu_scan);
-		
+		JMenuItem params = new JMenuItem("Parameters");
+		menu_scan.add(params);
+				
 		JMenu menu_training = new JMenu("Training");
 		JMenuItem char_load = new JMenuItem("Load learned profile");
 		menu_training.add(char_load);		
@@ -97,8 +128,14 @@ public class LearningGUI extends JFrame
 		menu_help.add(help);
 		JMenuItem about = new JMenuItem("About");
 		menu_help.add(about);
+		about.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(LearningGUI.this,"Scan2Run Learning GUI");  
+			}
+		});
 		menuBar.add(menu_help);
-		
 		setJMenuBar(menuBar);
 		
 		// panels
@@ -133,6 +170,7 @@ public class LearningGUI extends JFrame
     public void setImage(File file) {
         try {
             image = ImageIO.read(file);
+            setTitle(APP_NAME+" - "+file.getName());
         }
         catch (IOException e) {
             LOG.warning("Image "+file+" not found - ignoring");
@@ -140,7 +178,32 @@ public class LearningGUI extends JFrame
         }
         img_area.setImage(image);
         img_area.setZoom(0.33);  // TODO compute
+        currentFile=file;
         // img_area.setSelection(246,88,8,12);
+    }
+    
+    public void loadImage() {
+		final JFileChooser fc = new JFileChooser();
+		fc.setCurrentDirectory(currentFile);
+		int returnVal = fc.showOpenDialog(this);
+		if (returnVal != JFileChooser.APPROVE_OPTION) return;
+
+		File file=fc.getSelectedFile();
+		setImage(file);;
+    }
+    
+    public void saveText() {
+		String txt=txt_area.getText();
+		final JFileChooser fc = new JFileChooser();
+		int returnVal = fc.showSaveDialog(this);
+		if (returnVal != JFileChooser.APPROVE_OPTION) return;
+		
+		File file=fc.getSelectedFile();
+		try (PrintStream out = new PrintStream(new FileOutputStream(file))) {
+		    out.print(txt);
+		} catch (FileNotFoundException e1) {
+			LOG.warning("Could not save to "+file);
+		}
     }
 
     /**
