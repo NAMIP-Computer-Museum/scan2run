@@ -11,7 +11,16 @@ However in order to transform such a listing in a running computer programs and 
 
 The main scope is to be able to run listing of 80's programs (e.g. BASIC) into an emulator with MAME as primary target. Our use case are emulator such as the Amstrad CPC (quite widespread) and the DAI In-DATA Imagination Machine (very rare computer).
 
-# Features
+# Design ideas / features
+
+The main idea is to keep the user in the loop to avoid errors because
+* listing are not normal text so statistical models are not relevant or need a specific training (not assumed here)
+* listing may be degraded at some place
+
+At the same time try to minimize the interaction by:
+* enabling to select threshold to decide about bad quality, help decide among ambiguous characters, unknown characters...
+* reuse learned profile (e.g. for a magazine keeping the same listing rendering chain)
+* allow some error to get through (can be detected by interpreter to some extend...)
 
 This projet currently aims at gathering and sharing minimal useful toolset supporting the above goals through
 * simple OCRing of listings with some learning support
@@ -19,11 +28,15 @@ This projet currently aims at gathering and sharing minimal useful toolset suppo
 
 Complementary Open Source tools such as gimp and ODS can be used to support digital capture of the resulting execution.
 
-## Status
+## Status / Testing
 
 The code is in alpha stage and include the following
 * OCR adapted from Java OCR (see https://roncemer.com/software-development/java-ocr/ and sourceforge) with improvements for interactive learning phase
 * Lua scripts for MAME injection either on a line basis or character per frame basis (depending on what the machine can accept as input)
+
+Current testing performed on
+* listing scan from DAINamic magazine, real case, medium quality - interaction rate can be down to 7% after 1 page
+* injection in MAME tested on Amstrad CPC and DAI computer, other emulator may provide equivalent fonction natively (e.g. JavaCPC)
 
 ## Running the code
 
@@ -59,6 +72,7 @@ For injection
 
 ## Future work
 
+* validation tests (roundrip from text to image back to text)
 * manage learned profiles, e.g. for magasines using the same font
 * training set editing
 * improved documentation, video tutorial
