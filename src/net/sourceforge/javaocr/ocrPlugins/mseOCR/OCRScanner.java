@@ -50,7 +50,7 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
 	private double askThreshold;
 	private double confirmThreshold;	
 	private int trainingThreshold;
-
+	
     private static final int BEST_MATCH_STORE_COUNT = 8;
     private StringBuffer decodeBuffer = new StringBuffer();
     private CharacterRange[] acceptableChars;
@@ -63,6 +63,7 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
     private DocumentScanner documentScanner = new DocumentScanner();
     private AccuracyListenerInterface accListener;
 
+	//  TODO check is still used
     private static List<Character> MINSETXX;
     static {
     	String s="ABCDEFGHIJKLMNOPQRSTUVWXYZ01234567989=+-*/()<>$:;.";
@@ -79,6 +80,12 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
     	askThreshold=t;
     }
 
+    public double computeAskThreshold() {
+    	int s=trainingImages.keySet().size();
+    	if (s>20) return askThreshold;
+    	return askThreshold-0.025*s;
+    }
+    
     public void setConfirmThreshold(double t) {
     	confirmThreshold=t;
     }
@@ -108,6 +115,10 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
     {
         trainingImages.clear();
     }
+    
+    public HashMap<Character, ArrayList<TrainingImage>> getTrainingImages() {
+    	return trainingImages;
+	}
 
     /**
      * Add training images to the training set.
@@ -318,7 +329,7 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
       	    if (diff<0.3) ambiguity=true;
         	System.out.println(decodeBuffer.length()+" "+bestChars[0].charValue()+"  "+bestMSEs[0]+"  "+diff);
         	System.out.println("TS SIZE: "+trainingImages.keySet().size());
-        	if (isTraining() || (bestMSEs[0]>askThreshold) || ambiguity) {
+        	if (isTraining() || (bestMSEs[0]>computeAskThreshold()) || ambiguity) {
         	  char ch=bestChars[0].charValue();
         	  if ((bestMSEs[0]>confirmThreshold) || ambiguity) ch=(char)0;
         	  String s=fromUser(pixelImage, x1, y1, x2, y2, rowY1, rowY2, ch);
@@ -413,7 +424,6 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
     }
     
     private String fromUser(PixelImage img, int x1, int y1, int x2, int y2, int rowY1, int rowY2, char c) {    
-    	listener.userRequested(c);
         //Extract the character
     	/*
         BufferedImage crop = new BufferedImage(x2-x1, y2-y1, BufferedImage.TYPE_INT_RGB);
@@ -430,17 +440,19 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
     
         // ask to confirm if there is a guess
         if ((int)c>0) {
+        	return listener.userRequested("Is this: "+c,icon,c);
+        	/*
            int res=JOptionPane.showConfirmDialog(null,"Is this: "+c, "Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, icon);
            if (res==JOptionPane.YES_OPTION) {
         	  return ""+c;
-           }
+           } */
         }
         
         // ask a guess if not confirmed
         String input="";
         while(input.length()==0) {
-        	input = (String)JOptionPane.showInputDialog(null,"What is this character ?","User Input", JOptionPane.QUESTION_MESSAGE, icon, null, null);
-        	
+        	//input = (String)JOptionPane.showInputDialog(null,"What is this character ?","User Input", JOptionPane.QUESTION_MESSAGE, icon, null, null);
+        	input=listener.userRequested("What is this character ?", icon, (char)0);
         }
         System.out.println("GOT: "+input);
         
@@ -479,35 +491,65 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
         	rgb[3*i+1]=p;
         	rgb[3*i+2]=p;
         }
-        WritableRaster raster = (WritableRaster) image.getData();
+        WritableRaster raster = (WritableRaster) image.getRaster();  // NOT getData !
         raster.setPixels(0,0,img.width,img.height,rgb);
         return image;
     }
+    
+    public String getTrainingSetName() {
+    	char cmin=255;
+    	char cmax=0;
+    	int hmax=0;
+    	int wmax=0;
+    	for(Character c:trainingImages.keySet()) {
+    		TrainingImage img=trainingImages.get(c).get(0); // only one for now
+    		char asc=c.charValue();
+    		if (asc<cmin) cmin=asc;
+    		if (asc>cmax) cmax=asc;
+    	}
+    	return "RAN"+(int)cmin+"-"+(int)cmax+".png";
+    }
 
-    private void displayTrainingSet() {
-    	if (trainingImages.keySet().size()==0) return;
-    	
-    	int MAX=15;
+    public BufferedImage getTrainingSetImage() {
+    	char cmin=255;
+    	char cmax=0;
+    	int hmax=0;
+    	int wmax=0;
+    	for(Character c:trainingImages.keySet()) {
+    		TrainingImage img=trainingImages.get(c).get(0); // only one for now
+    		char asc=c.charValue();
+    		if (asc<cmin) cmin=asc;
+    		if (asc>cmax) cmax=asc;
+    		if (img.height>hmax) hmax=img.height;
+    		if (img.width>wmax)  wmax=img.width;
+    	}
 
-    	TrainingImage img=trainingImages.get('0').get(0); // requires "0" as sample !
-    	BufferedImage sample=getImageFromPixelImage(img);
-    	System.out.println("Sample: "+sample);
-        BufferedImage combined = new BufferedImage(sample.getWidth()*10, sample.getHeight(), sample.getType());
+    	System.out.println((int)cmin+" "+(int)cmax);
+        BufferedImage combined = new BufferedImage(wmax*(cmax-cmin+1), hmax, BufferedImage.TYPE_INT_RGB);
     	Graphics g = combined.getGraphics();
-    	
-    	int i=0;
-    	for(Character ch:trainingImages.keySet()) {
-        	TrainingImage timg=trainingImages.get(ch).get(0);
-        	BufferedImage bimg=getImageFromPixelImage(img);
-            g.drawImage(bimg, i*sample.getWidth(), 0, null);
-            i++;
-            if (i==MAX) break;
+    	g.setColor(Color.WHITE);
+    	g.fillRect(0,0,combined.getWidth(),combined.getHeight());
+
+        for(char c=cmin;c<=cmax; c++) {
+        	List<TrainingImage> list=trainingImages.get(c);
+        	TrainingImage img;
+        	if (list==null) 
+        		img=null;
+        	else
+        		img=list.get(0);
+        	if (img==null) {  // block
+        		g.setColor(Color.BLACK);
+        		g.fillRect((c-cmin)*wmax+5, 5, wmax-10, hmax-10);   // TODO BORDER PARAM
+        	} else {          // char
+        		BufferedImage bimg=OCRScanner.getImageFromPixelImage(img);
+            	g.drawImage(bimg, (c-cmin)*wmax, 0, null);
+        	}
         }
     	g.dispose();
-        
-    	ImageIcon icon=new ImageIcon(combined);
-        JOptionPane.showConfirmDialog(null,"","Training Set", JOptionPane.OK_OPTION, JOptionPane.INFORMATION_MESSAGE, icon);
+
+    	return combined;
     }
+    
     
     private boolean isTrainingImageACandidate(
             float aspectRatio,
@@ -575,5 +617,6 @@ public class OCRScanner extends DocumentScannerListenerAdaptor implements Accura
             accListener.processCharOrSpace(identAccuracy);
         }
     }
+    
     private static final Logger LOG = Logger.getLogger(OCRScanner.class.getName());
 }

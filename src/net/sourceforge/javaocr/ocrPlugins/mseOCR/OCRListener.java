@@ -1,5 +1,7 @@
 package net.sourceforge.javaocr.ocrPlugins.mseOCR;
 
+import javax.swing.ImageIcon;
+
 public interface OCRListener {
 	// called when cursor is moved to new scan position
 	public void selectionUpdated(int x, int y, int w, int h);
@@ -8,6 +10,6 @@ public interface OCRListener {
 	public void textUpdated(String text);
 	
 	// called when user input is requested
-	public void userRequested(char c);	
+	public String userRequested(String question, ImageIcon icon, char candidate);	
 	
 }

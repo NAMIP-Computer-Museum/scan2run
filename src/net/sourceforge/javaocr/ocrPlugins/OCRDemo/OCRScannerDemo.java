@@ -113,6 +113,7 @@ public class OCRScannerDemo
             {
                 System.err.println("adding images");
             }
+            // cleanTrainingImage(trainingImageMap); // TODO maybe here too
             scanner.addTrainingImages(trainingImageMap);
             if (debug)
             {

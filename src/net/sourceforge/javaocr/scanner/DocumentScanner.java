@@ -15,6 +15,7 @@ import java.util.logging.Logger;
  */
 public class DocumentScanner
 {
+	private boolean stopRequested=false;
 
     /**
      * The maximum fraction a row's height can be of the previous row's height,
@@ -556,8 +557,15 @@ public class DocumentScanner
             {
                 listener.processChar(pixelImage, cx1, cy1, cx2, cy2, y1, y2);
             }
-        }
+            if (stopRequested) break;
+        }        
         listener.endRow(pixelImage, y1, y2);
+        if (stopRequested) return;
     }
+    
+    public void stop() {
+    	stopRequested=true;
+    }
+    
     private static final Logger LOG = Logger.getLogger(DocumentScanner.class.getName());
 }
