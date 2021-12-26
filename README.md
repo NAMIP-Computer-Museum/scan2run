@@ -11,7 +11,7 @@ However in order to transform such a listing in a running computer programs and 
 
 The main scope is to be able to run listing of 80's programs (e.g. BASIC) into an emulator with MAME as primary target. Our use case are emulator such as the Amstrad CPC (quite widespread) and the DAI In-DATA Imagination Machine (very rare computer).
 
-# Design ideas / features
+## Design ideas / features
 
 The main idea is to keep the user in the loop to avoid errors because
 * listing are not normal text so statistical models are not relevant or need a specific training (not assumed here)
